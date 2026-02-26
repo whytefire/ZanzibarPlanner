@@ -1,0 +1,51 @@
+{
+  "search": {
+    "origin": "JNB",
+    "origin_city": "Johannesburg",
+    "destination": "ZNZ",
+    "destination_city": "Zanzibar",
+    "date_ranges": [
+      {
+        "label": "Option A: 10-17 Oct",
+        "depart": "2026-10-10",
+        "return": "2026-10-17"
+      },
+      {
+        "label": "Option B: 17-24 Oct",
+        "depart": "2026-10-17",
+        "return": "2026-10-24"
+      }
+    ],
+    "adults": 2,
+    "trip_type": "all-inclusive",
+    "currency": "ZAR",
+    "max_budget_per_person": 30000
+  },
+  "apis": {
+    "_instructions": "Flight prices powered by Amadeus API. Keys stored in .env file.",
+    "amadeus": {
+      "_signup": "https://developers.amadeus.com (free, 500 calls/month)",
+      "_env_vars": "AMADEUS_API_KEY and AMADEUS_API_SECRET in .env file"
+    }
+  },
+  "deal_search_queries": [
+    "Zanzibar all inclusive holiday package from Johannesburg October 2026",
+    "Zanzibar all inclusive deal flights hotel Johannesburg October 2026",
+    "cheap Zanzibar package holiday South Africa October 2026",
+    "Zanzibar beach resort all inclusive special October 2026"
+  ],
+  "notifications": {
+    "enabled": true,
+    "email": {
+      "smtp_server": "smtp.gmail.com",
+      "smtp_port": 587,
+      "sender_email": "whytefire@gmail.com",
+      "recipient_email": "whytefire@gmail.com"
+    },
+    "price_drop_threshold_percent": 5
+  },
+  "schedule": {
+    "run_daily_at": "08:00",
+    "timezone": "Africa/Johannesburg"
+  }
+}
