@@ -77,6 +77,7 @@ def generate_html_report(deals: list, price_drops: list, stats: dict, config: di
         <p style="font-size: 14px;">
             {' &nbsp;|&nbsp; '.join(dr['label'] for dr in search['date_ranges'])}
             &nbsp;|&nbsp; {search['adults']} adults &nbsp;|&nbsp; All-Inclusive
+            {f" &nbsp;|&nbsp; {search.get('location_filter', '')}" if search.get('location_filter') else ''}
         </p>
     </div>
 

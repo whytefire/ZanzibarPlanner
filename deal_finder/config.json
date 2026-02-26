@@ -19,7 +19,9 @@
     "adults": 2,
     "trip_type": "all-inclusive",
     "currency": "ZAR",
-    "max_budget_per_person": 30000
+    "max_budget_per_person": 30000,
+    "preferred_locations": ["Nungwi", "Kendwa", "Matemwe", "Kiwengwa", "Pongwe"],
+    "location_filter": "North and North East Zanzibar only"
   },
   "apis": {
     "_instructions": "Flight prices powered by Amadeus API. Keys stored in .env file.",
@@ -29,10 +31,11 @@
     }
   },
   "deal_search_queries": [
-    "Zanzibar all inclusive holiday package from Johannesburg October 2026",
-    "Zanzibar all inclusive deal flights hotel Johannesburg October 2026",
-    "cheap Zanzibar package holiday South Africa October 2026",
-    "Zanzibar beach resort all inclusive special October 2026"
+    "Nungwi Zanzibar all inclusive holiday package from Johannesburg October 2026",
+    "Kendwa Zanzibar all inclusive deal flights hotel Johannesburg October 2026",
+    "Matemwe Zanzibar all inclusive package South Africa October 2026",
+    "Zanzibar north coast beach resort all inclusive special October 2026",
+    "Kiwengwa Pongwe Zanzibar all inclusive holiday deal October 2026"
   ],
   "notifications": {
     "enabled": true,

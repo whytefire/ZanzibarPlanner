@@ -60,7 +60,10 @@ def run_scan(config: dict = None, open_report: bool = True):
     print(f"  {datetime.now().strftime('%A %d %B %Y, %H:%M')}")
     print(f"  Route: {search['origin_city']} -> {search['destination_city']}")
     print(f"  Dates: {' | '.join(dr['label'] for dr in date_ranges)}")
+    loc_filter = search.get("location_filter", "")
     print(f"  Looking for: All-Inclusive, {search['adults']} adults")
+    if loc_filter:
+        print(f"  Location: {loc_filter}")
     print("=" * 70 + "\n")
 
     all_deals = []

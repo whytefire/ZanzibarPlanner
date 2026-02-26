@@ -41,9 +41,28 @@ KNOWN_PACKAGE_URLS = [
     },
 ]
 
+PREFERRED_LOCATIONS = []
+
+
+def _load_preferred_locations(config: dict) -> list:
+    """Load preferred location names from config, lowercased for matching."""
+    global PREFERRED_LOCATIONS
+    locs = config.get("search", {}).get("preferred_locations", [])
+    PREFERRED_LOCATIONS = [loc.lower() for loc in locs]
+    return PREFERRED_LOCATIONS
+
+
+def _matches_preferred_location(text: str) -> bool:
+    """Check if text mentions any of the preferred locations."""
+    if not PREFERRED_LOCATIONS:
+        return True
+    text_lower = text.lower()
+    return any(loc in text_lower for loc in PREFERRED_LOCATIONS)
+
 
 def search_packages_web(config: dict, date_range: dict) -> list:
     """Discover package deals via DuckDuckGo search."""
+    _load_preferred_locations(config)
     deals = []
     queries = config.get("deal_search_queries", [])
 
@@ -51,10 +70,13 @@ def search_packages_web(config: dict, date_range: dict) -> list:
     return_date = date_range["return"]
     label = date_range["label"]
 
+    locations = config.get("search", {}).get("preferred_locations", [])
+    loc_str = " ".join(locations[:3]) if locations else ""
+
     extra_queries = [
-        f"Zanzibar all inclusive package from Johannesburg {depart} to {return_date}",
-        f"Zanzibar holiday deal flights hotel all inclusive October 2026 South Africa",
-        f"best Zanzibar package deals {datetime.now().strftime('%B %Y')}",
+        f"{loc_str} Zanzibar all inclusive package from Johannesburg {depart} to {return_date}",
+        f"Zanzibar north coast holiday deal flights hotel all inclusive October 2026 South Africa",
+        f"best Zanzibar {loc_str} package deals {datetime.now().strftime('%B %Y')}",
     ]
     all_queries = queries + extra_queries
 
@@ -70,6 +92,7 @@ def search_packages_web(config: dict, date_range: dict) -> list:
                     if not _is_relevant(full_text):
                         continue
 
+                    location_match = _matches_preferred_location(full_text)
                     deals.append({
                         "source": "web_search",
                         "deal_type": "package" if is_ai else "mixed",
@@ -82,8 +105,10 @@ def search_packages_web(config: dict, date_range: dict) -> list:
                         "details": {
                             "snippet": r.get("body", ""),
                             "search_query": query,
+                            "location_match": location_match,
                         },
                         "is_all_inclusive": is_ai,
+                        "location_match": location_match,
                     })
             except Exception as e:
                 logger.warning(f"Web search failed for '{query}': {e}")
@@ -93,6 +118,7 @@ def search_packages_web(config: dict, date_range: dict) -> list:
 
 def scrape_package_sites(config: dict, date_range: dict) -> list:
     """Scrape known travel agency sites using Playwright."""
+    _load_preferred_locations(config)
     deals = []
     label = date_range["label"]
 
@@ -136,9 +162,12 @@ def scrape_specific_resort_sites(date_range: dict) -> list:
     label = date_range["label"]
 
     resort_urls = [
-        ("Baraza Resort & Spa", "https://www.baraza-zanzibar.com/"),
-        ("Royal Zanzibar", "https://www.royalzanzibar.com/"),
-        ("Melia Zanzibar", "https://www.melia.com/en/hotels/tanzania/zanzibar/melia-zanzibar"),
+        ("Royal Zanzibar (Nungwi)", "https://www.royalzanzibar.com/"),
+        ("Diamonds Star of the East (Nungwi)", "https://www.diamondsresorts.com/diamonds-star-of-the-east"),
+        ("Zuri Zanzibar (Kendwa)", "https://www.zurizanzibar.com/"),
+        ("Gold Zanzibar Beach House (Kendwa)", "https://www.goldzanzibar.com/"),
+        ("Matemwe Retreat", "https://www.asiliaafrica.com/matemwe-retreat/"),
+        ("Melia Zanzibar (Kiwengwa)", "https://www.melia.com/en/hotels/tanzania/zanzibar/melia-zanzibar"),
     ]
 
     for resort_name, url in resort_urls:
@@ -166,6 +195,7 @@ def scrape_specific_resort_sites(date_range: dict) -> list:
                         "url": url,
                         "details": {"specials": specials},
                         "is_all_inclusive": "all inclusive" in text.lower() or "all-inclusive" in text.lower(),
+                        "location_match": True,
                     })
         except Exception as e:
             logger.warning(f"Failed to check {resort_name}: {e}")
@@ -175,8 +205,13 @@ def scrape_specific_resort_sites(date_range: dict) -> list:
 
 def search_all_packages(config: dict, date_range: dict) -> list:
     """Run all package search methods for a given date range."""
+    _load_preferred_locations(config)
     label = date_range["label"]
-    logger.info(f"Searching packages for {label}")
+    location_filter = config.get("search", {}).get("location_filter", "")
+    if location_filter:
+        logger.info(f"Searching packages for {label} — filter: {location_filter}")
+    else:
+        logger.info(f"Searching packages for {label}")
 
     all_deals = []
 
@@ -190,6 +225,11 @@ def search_all_packages(config: dict, date_range: dict) -> list:
     resort_deals = scrape_specific_resort_sites(date_range)
     all_deals.extend(resort_deals)
     logger.info(f"  Resort direct found {len(resort_deals)} results")
+
+    if PREFERRED_LOCATIONS:
+        before = len(all_deals)
+        all_deals = [d for d in all_deals if d.get("location_match", False)]
+        logger.info(f"  Location filter: kept {len(all_deals)} of {before} deals matching {', '.join(PREFERRED_LOCATIONS)}")
 
     return all_deals
 
@@ -229,6 +269,7 @@ def _parse_package_page(soup: BeautifulSoup, site_name: str, base_url: str, labe
                             href = urljoin(base_url, href)
                         link = href
 
+                location_match = _matches_preferred_location(context or text)
                 deals.append({
                     "source": site_name.lower().replace(" ", "_"),
                     "deal_type": "package",
@@ -240,6 +281,7 @@ def _parse_package_page(soup: BeautifulSoup, site_name: str, base_url: str, labe
                     "url": link or base_url,
                     "details": {"raw_text": text},
                     "is_all_inclusive": _is_all_inclusive(context or text),
+                    "location_match": location_match,
                 })
     return deals
 
