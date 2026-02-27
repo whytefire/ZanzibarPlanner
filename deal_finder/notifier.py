@@ -236,12 +236,20 @@ def _load_env_file():
                 os.environ.setdefault(key.strip(), value.strip())
 
 
+def _safe_print(text: str):
+    """Print text safely, replacing characters that can't be encoded in the current console."""
+    try:
+        print(text)
+    except UnicodeEncodeError:
+        print(text.encode("ascii", errors="replace").decode("ascii"))
+
+
 def print_console_summary(deals: list, price_drops: list, stats: dict):
     """Print a clean summary to the console."""
-    print("\n" + "=" * 70)
-    print("  ZANZIBAR DEAL FINDER - Daily Report")
-    print(f"  {datetime.now().strftime('%A %d %B %Y, %H:%M')}")
-    print("=" * 70)
+    _safe_print("\n" + "=" * 70)
+    _safe_print("  ZANZIBAR DEAL FINDER - Daily Report")
+    _safe_print(f"  {datetime.now().strftime('%A %d %B %Y, %H:%M')}")
+    _safe_print("=" * 70)
 
     package_deals = sorted(
         [d for d in deals if d.get("is_all_inclusive") and d.get("price_per_person")],
@@ -253,35 +261,35 @@ def print_console_summary(deals: list, price_drops: list, stats: dict):
     )
 
     if price_drops:
-        print(f"\n  PRICE DROPS DETECTED ({len(price_drops)}):")
+        _safe_print(f"\n  PRICE DROPS DETECTED ({len(price_drops)}):")
         for drop in price_drops:
-            print(f"    {drop.get('title', 'Deal')[:60]}")
-            print(f"      Was R{drop.get('previous_best', 0):,.0f} -> Now R{drop.get('current_price', 0):,.0f}"
-                  f" ({drop.get('drop_percent', '?')}% off)")
+            _safe_print(f"    {drop.get('title', 'Deal')[:60]}")
+            _safe_print(f"      Was R{drop.get('previous_best', 0):,.0f} -> Now R{drop.get('current_price', 0):,.0f}"
+                        f" ({drop.get('drop_percent', '?')}% off)")
 
-    print(f"\n  BEST ALL-INCLUSIVE PACKAGES (top 5):")
+    _safe_print(f"\n  BEST ALL-INCLUSIVE PACKAGES (top 5):")
     if package_deals:
         for i, d in enumerate(package_deals[:5], 1):
-            print(f"    {i}. R{d['price_per_person']:,.0f} pps - {d.get('title', 'Deal')[:55]}")
-            print(f"       {d.get('date_range', '')} | {d.get('provider', '')}")
+            _safe_print(f"    {i}. R{d['price_per_person']:,.0f} pps - {d.get('title', 'Deal')[:55]}")
+            _safe_print(f"       {d.get('date_range', '')} | {d.get('provider', '')}")
             if d.get("url"):
-                print(f"       {d['url'][:80]}")
+                _safe_print(f"       {d['url'][:80]}")
     else:
-        print("    No all-inclusive deals found yet.")
+        _safe_print("    No all-inclusive deals found yet.")
 
-    print(f"\n  CHEAPEST FLIGHTS (top 5):")
+    _safe_print(f"\n  CHEAPEST FLIGHTS (top 5):")
     if flight_deals:
         for i, d in enumerate(flight_deals[:5], 1):
-            print(f"    {i}. R{d['price_per_person']:,.0f} pps - {d.get('provider', 'Unknown')}")
+            _safe_print(f"    {i}. R{d['price_per_person']:,.0f} pps - {d.get('provider', 'Unknown')}")
             if d.get("url"):
-                print(f"       {d['url'][:80]}")
+                _safe_print(f"       {d['url'][:80]}")
     else:
-        print("    No flight prices found yet.")
+        _safe_print("    No flight prices found yet.")
 
-    print(f"\n  STATS:")
-    print(f"    Total deals tracked: {stats.get('total_deals_tracked', 0)}")
+    _safe_print(f"\n  STATS:")
+    _safe_print(f"    Total deals tracked: {stats.get('total_deals_tracked', 0)}")
     cheapest = stats.get("cheapest_all_inclusive_pps")
     if cheapest:
-        print(f"    Best all-inclusive ever: R{cheapest:,.0f} pps")
+        _safe_print(f"    Best all-inclusive ever: R{cheapest:,.0f} pps")
 
-    print("\n" + "=" * 70 + "\n")
+    _safe_print("\n" + "=" * 70 + "\n")

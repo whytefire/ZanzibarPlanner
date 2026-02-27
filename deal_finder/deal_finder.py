@@ -93,10 +93,10 @@ def run_scan(config: dict = None, open_report: bool = True):
     price_drops = detect_price_drops(threshold)
     stats = get_summary_stats()
 
-    print_console_summary(all_deals, price_drops, stats)
-
     html = generate_html_report(all_deals, price_drops, stats, config)
     report_path = save_report(html)
+
+    print_console_summary(all_deals, price_drops, stats)
 
     if open_report:
         try:
